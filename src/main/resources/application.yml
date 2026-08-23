@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cortex
+    username: dhananjai_dj
+    password: Ammu123*
+  ai:
+    openai:
+      base-url: http://192.168.1.5:1234/v1
+      api-key: lm-studio
+      chat:
+        model: gemma-4-eb
+      embedding:
+        model: nomic-embed-text-v1.5
+    mcp:
+      server:
+        name: cortex-kb-server
+        version: 1.0.0
+        sse-endpoint: /mcp/sse
+        sse-message-endpoint: /mcp/message
+        type: sync
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 768
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  application:
+    name: Cortex
+debug: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings
