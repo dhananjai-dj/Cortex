@@ -10,6 +10,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,14 +35,25 @@ public class SearchService {
             List<Document> validDocuments = getValidDocuments(searchRequest, documentList);
             if (DocumentUtil.isNonEmptyDocumentList(validDocuments)) {
                 for (Document document : validDocuments) {
-                    KbResult kbResult = new KbResult(document.getText(), extractMetaDataValue(document, "author"), extractMetaDataValue(document, "microservice"));
+                    KbResult kbResult = new KbResult(document.getText(), extractMetaDataValue(document, "author"), extractMetaDataValue(document, "microservice"), extractMetaDataValue(document, "timestamp"));
                     result.add(kbResult);
                 }
             }
+            result.sort(Comparator.comparing(KbResult::timestamp));
+            List<KbResult> summaryResult = summaryService.generateResult(result);
+            if (!summaryResult.isEmpty()) {
+                return summaryResult;
+            } else if (!result.isEmpty()) {
+                return result;
+            }
         } catch (Exception e) {
             logger.error("Error in searching data {}", e.getMessage());
+        } finally {
+            if (result.isEmpty()) {
+                logger.error("No results found");
+            }
         }
-        return summaryService.generateResult(result);
+        return List.of(new KbResult("No Content found", "", "", ""));
     }
 
     private List<Document> getValidDocuments(SearchRequest searchRequest, List<Document> documentList) {
