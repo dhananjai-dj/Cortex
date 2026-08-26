@@ -30,13 +30,19 @@ public class KnowledgeBaseTools {
             @McpToolParam(description = Prompts.INJECT_TOOL_MICROSERVICE_PROMPT)
             String microservice,
             @McpToolParam(description = Prompts.INJECT_TOOL_AUTHOR_PROMPT)
-            String author
+            String author,
+            @McpToolParam(description = Prompts.INJECT_TOOL_TIMESTAMP_PROMPT)
+            String timestamp,
+            @McpToolParam(description = Prompts.INJECT_TOOL_CLASSIFICATION_PROMPT)
+            String classification
     ) {
         Map<String, Object> metaData = Map.of(
                 "microservice", microservice,
-                "author", author
+                "author", author,
+                "timestamp", timestamp,
+                "classification", classification
         );
-        injectorService.injectData(summary, metaData);
+        injectorService.injectData(summary, metaData, false);
         return "Data is being pushed to Knowledge Base";
     }
 

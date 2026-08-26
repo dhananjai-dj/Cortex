@@ -9,5 +9,6 @@ public class CortexApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CortexApplication.class, args);
 	}
+	// export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 
 }

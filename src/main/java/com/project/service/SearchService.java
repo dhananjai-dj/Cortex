@@ -35,7 +35,7 @@ public class SearchService {
             List<Document> validDocuments = getValidDocuments(searchRequest, documentList);
             if (DocumentUtil.isNonEmptyDocumentList(validDocuments)) {
                 for (Document document : validDocuments) {
-                    KbResult kbResult = new KbResult(document.getText(), extractMetaDataValue(document, "author"), extractMetaDataValue(document, "microservice"), extractMetaDataValue(document, "timestamp"));
+                    KbResult kbResult = new KbResult(document.getText(), DocumentUtil.extractMetaDataValue(document, "author"), DocumentUtil.extractMetaDataValue(document, "microservice"), DocumentUtil.extractMetaDataValue(document, "timestamp"), DocumentUtil.extractMetaDataValue(document, "classification"));
                     result.add(kbResult);
                 }
             }
@@ -53,7 +53,7 @@ public class SearchService {
                 logger.error("No results found");
             }
         }
-        return List.of(new KbResult("No Content found", "", "", ""));
+        return List.of(new KbResult("No Content found", "", "", "", ""));
     }
 
     private List<Document> getValidDocuments(SearchRequest searchRequest, List<Document> documentList) {
@@ -76,18 +76,5 @@ public class SearchService {
             logger.info("Returning all Documents since there is error in validating");
         }
         return documentList;
-    }
-
-    private String extractMetaDataValue(Document document, String key) {
-        try {
-            if (document != null) {
-                Map<String, Object> metaData = document.getMetadata();
-                Object result = metaData.get(key);
-                return result != null ? result.toString() : "";
-            }
-        } catch (Exception e) {
-            logger.error("Error in extracting meta data from the document {}", e.getMessage());
-        }
-        return "";
     }
 }

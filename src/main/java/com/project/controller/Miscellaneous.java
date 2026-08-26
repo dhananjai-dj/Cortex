@@ -35,8 +35,7 @@ public class Miscellaneous {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("author", "Dhananjai");
         metadata.put("microservice", "cortex");
-
-        injectorService.injectData(request.summary(), metadata);
+        injectorService.injectData(request.summary(), metadata, false);
         return "Submitted for ingestion";
     }
 
