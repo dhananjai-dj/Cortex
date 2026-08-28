@@ -2,7 +2,7 @@ package com.project.tools;
 
 import com.project.constants.Prompts;
 import com.project.dto.KbResult;
-import com.project.dto.SearchRequest;
+import com.project.dto.KbSearchRequest;
 import com.project.service.InjectorService;
 import com.project.service.SearchService;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -49,7 +49,7 @@ public class KnowledgeBaseTools {
     @McpTool(name = "search_knowledge_base", description = Prompts.SEARCH_TOOL_PROMPT)
     public List<KbResult> searchInKnowledgeBase(
             @McpToolParam(description = Prompts.SEARCH_TOOL_QUERY_PROMPT)
-            SearchRequest searchRequest
+            KbSearchRequest searchRequest
     ) {
         return searchService.searchData(searchRequest);
     }

@@ -2,7 +2,7 @@ package com.project.controller;
 
 import com.project.dto.InjectRequest;
 import com.project.dto.KbResult;
-import com.project.dto.SearchRequest;
+import com.project.dto.KbSearchRequest;
 import com.project.service.DeleteService;
 import com.project.service.InjectorService;
 import com.project.service.SearchService;
@@ -46,7 +46,7 @@ public class Miscellaneous {
     }
 
     @PostMapping("/search")
-    public List<KbResult> search(@RequestBody SearchRequest request) {
+    public List<KbResult> search(@RequestBody KbSearchRequest request) {
         return searchService.searchData(request);
     }
 

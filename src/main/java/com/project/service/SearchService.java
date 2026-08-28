@@ -1,11 +1,12 @@
 package com.project.service;
 
 import com.project.dto.KbResult;
-import com.project.dto.SearchRequest;
+import com.project.dto.KbSearchRequest;
 import com.project.util.DocumentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +28,13 @@ public class SearchService {
         this.summaryService = summaryService;
     }
 
-    public List<KbResult> searchData(SearchRequest searchRequest) {
-        String query = searchRequest.query();
+    public List<KbResult> searchData(KbSearchRequest kbSearchRequest) {
         List<KbResult> result = new ArrayList<>();
         try {
-            List<Document> documentList = vectorStore.similaritySearch(query);
-            List<Document> validDocuments = getValidDocuments(searchRequest, documentList);
-            if (DocumentUtil.isNonEmptyDocumentList(validDocuments)) {
-                for (Document document : validDocuments) {
+            SearchRequest searchRequest = getSearchRequest(kbSearchRequest);
+            List<Document> documentList = vectorStore.similaritySearch(searchRequest);
+            if (DocumentUtil.isNonEmptyDocumentList(documentList)) {
+                for (Document document : documentList) {
                     KbResult kbResult = new KbResult(document.getText(), DocumentUtil.extractMetaDataValue(document, "author"), DocumentUtil.extractMetaDataValue(document, "microservice"), DocumentUtil.extractMetaDataValue(document, "timestamp"), DocumentUtil.extractMetaDataValue(document, "classification"));
                     result.add(kbResult);
                 }
@@ -47,34 +47,25 @@ public class SearchService {
                 return result;
             }
         } catch (Exception e) {
-            logger.error("Error in searching data {}", e.getMessage());
+            logger.error("Error in searching query {}", e.getMessage());
         } finally {
             if (result.isEmpty()) {
                 logger.error("No results found");
             }
         }
-        return List.of(new KbResult("No Content found", "", "", "", ""));
+        return List.of(KbResult.defaultResult());
     }
 
-    private List<Document> getValidDocuments(SearchRequest searchRequest, List<Document> documentList) {
+    private SearchRequest getSearchRequest(KbSearchRequest kbSearchRequest) {
         try {
-            List<Document> validDocuments = new ArrayList<>();
-            int limit = searchRequest.limit() != null ? Math.max(5, searchRequest.limit()) : 5;
-            double minScore = searchRequest.minScore() != null ? Math.min(DocumentUtil.getSimilarBoundaryScore(), searchRequest.minScore()) : DocumentUtil.getSimilarBoundaryScore();
-            for (Document document : documentList) {
-                if (DocumentUtil.getDocumentScore(document) > minScore) {
-                    if (limit == 0) {
-                        break;
-                    }
-                    validDocuments.add(document);
-                    limit--;
-                }
-            }
-            return validDocuments;
+            String query = kbSearchRequest.query();
+            int limit = kbSearchRequest.limit() != null ? Math.max(5, kbSearchRequest.limit()) : 5;
+            double minScore = kbSearchRequest.minScore() != null ? Math.min(DocumentUtil.getSimilarBoundaryScore(), kbSearchRequest.minScore()) : DocumentUtil.getSimilarBoundaryScore();
+            return SearchRequest.builder().query(query).similarityThreshold(minScore).topK(limit).build();
         } catch (Exception e) {
-            logger.error("Error in validating the documents {}", e.getMessage());
-            logger.info("Returning all Documents since there is error in validating");
+            logger.error("Error in generating searching Request Object {}", e.getMessage());
         }
-        return documentList;
+        return SearchRequest.builder().query(kbSearchRequest.query()).build();
     }
+
 }
