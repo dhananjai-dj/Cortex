@@ -43,7 +43,8 @@ public class SearchService {
             List<KbResult> summaryResult = summaryService.generateResult(result);
             if (!summaryResult.isEmpty()) {
                 return summaryResult;
-            } else if (!result.isEmpty()) {
+            }
+            if (!result.isEmpty()) {
                 return result;
             }
         } catch (Exception e) {
