@@ -1,9 +1,11 @@
 package com.project.dto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.util.DocumentUtil;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.document.Document;
 
 
 public record KbResult(String content, String author, String microservice, String timestamp, String classification) {
@@ -34,4 +36,24 @@ public record KbResult(String content, String author, String microservice, Strin
             throw new RuntimeException(e);
         }
     }
+
+    public static KbResult parseDocument(Document document) {
+        if (document == null) {
+            return null;
+        }
+        try {
+            return new KbResult(
+                    document.getText(),
+                    DocumentUtil.extractMetaDataValue(document, "author"),
+                    DocumentUtil.extractMetaDataValue(document, "microservice"),
+                    DocumentUtil.extractMetaDataValue(document, "timestamp"),
+                    DocumentUtil.extractMetaDataValue(document, "classification")
+            );
+        } catch (Exception e) {
+            log.error("KbResult parse error of the document {} ", document, e);
+        }
+        return null;
+    }
+
+
 }

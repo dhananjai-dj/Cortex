@@ -10,13 +10,16 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class SearchService {
+
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final Logger logger = LoggerFactory.getLogger(SearchService.class);
 
@@ -29,17 +32,22 @@ public class SearchService {
     }
 
     public List<KbResult> searchData(KbSearchRequest kbSearchRequest) {
-        List<KbResult> result = new ArrayList<>();
+        List<KbResult> result = null;
         try {
-            SearchRequest searchRequest = getSearchRequest(kbSearchRequest);
+            SearchRequest searchRequest = generateSearchRequest(kbSearchRequest);
             List<Document> documentList = vectorStore.similaritySearch(searchRequest);
-            if (DocumentUtil.isNonEmptyDocumentList(documentList)) {
-                for (Document document : documentList) {
-                    KbResult kbResult = new KbResult(document.getText(), DocumentUtil.extractMetaDataValue(document, "author"), DocumentUtil.extractMetaDataValue(document, "microservice"), DocumentUtil.extractMetaDataValue(document, "timestamp"), DocumentUtil.extractMetaDataValue(document, "classification"));
+            if (!DocumentUtil.isNonEmptyDocumentList(documentList)) {
+                logger.warn("Document list is empty");
+                return List.of(KbResult.defaultResult());
+            }
+            result = new ArrayList<>(documentList.size());
+            for (Document document : documentList) {
+                KbResult kbResult = KbResult.parseDocument(document);
+                if (kbResult != null) {
                     result.add(kbResult);
                 }
             }
-            result.sort(Comparator.comparing(KbResult::timestamp));
+            result.sort(Comparator.comparing(SearchService::parseTimestamp, Comparator.nullsLast(Comparator.naturalOrder())));
             List<KbResult> summaryResult = summaryService.generateResult(result);
             if (!summaryResult.isEmpty()) {
                 return summaryResult;
@@ -49,15 +57,19 @@ public class SearchService {
             }
         } catch (Exception e) {
             logger.error("Error in searching query {}", e.getMessage());
-        } finally {
-            if (result.isEmpty()) {
-                logger.error("No results found");
-            }
         }
         return List.of(KbResult.defaultResult());
     }
 
-    private SearchRequest getSearchRequest(KbSearchRequest kbSearchRequest) {
+    private static LocalDateTime parseTimestamp(KbResult kbResult) {
+        try {
+            return LocalDateTime.parse(kbResult.timestamp(), TIMESTAMP_FORMATTER);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private SearchRequest generateSearchRequest(KbSearchRequest kbSearchRequest) {
         try {
             String query = kbSearchRequest.query();
             int limit = kbSearchRequest.limit() != null ? Math.max(5, kbSearchRequest.limit()) : 5;
