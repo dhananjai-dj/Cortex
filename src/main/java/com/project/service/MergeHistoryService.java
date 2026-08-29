@@ -4,6 +4,8 @@ import com.project.dao.MergeHistory;
 import com.project.dao.repository.MergeHistoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -59,10 +61,11 @@ public class MergeHistoryService {
         return result;
     }
 
-    public List<MergeHistory> getAllMergeHistory() {
+    public List<MergeHistory> getAllMergeHistory(int page, int size) {
         List<MergeHistory> mergeHistories = null;
         try {
-            mergeHistories = mergeHistoryRepository.findAll();
+            Pageable pageable = PageRequest.of(page, size);
+            mergeHistories = mergeHistoryRepository.findAll(pageable).stream().toList();
         } catch (Exception e) {
             logger.error("Error getting all merge history", e);
         }

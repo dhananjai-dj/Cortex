@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,10 +28,10 @@ public class DashBoardController {
     }
 
     @GetMapping("/merge-history")
-    public ResponseEntity<?> getMergeHistory(HttpServletRequest request) {
+    public ResponseEntity<?> getMergeHistory(HttpServletRequest request, @RequestParam int page, @RequestParam int size) {
         ResponseEntity<?> responseEntity = null;
         try {
-            List<MergeHistory> mergeHistories = mergeHistoryService.getAllMergeHistory();
+            List<MergeHistory> mergeHistories = mergeHistoryService.getAllMergeHistory(page, size);
             responseEntity = new ResponseEntity<>(mergeHistories, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error in getting merge history {}", e.getMessage());
@@ -43,10 +40,10 @@ public class DashBoardController {
     }
 
     @GetMapping("/session-audit")
-    public ResponseEntity<?> getSessionAudit(HttpServletRequest request) {
+    public ResponseEntity<?> getSessionAudit(HttpServletRequest request, @RequestParam int page, @RequestParam int size) {
         ResponseEntity<?> responseEntity = null;
         try {
-            List<SessionAudit> sessionAudits = sessionAuditService.getAllSessionAudit();
+            List<SessionAudit> sessionAudits = sessionAuditService.getAllSessionAudit(page, size);
             responseEntity = new ResponseEntity<>(sessionAudits, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error in getting complete session audit {}", e.getMessage());
@@ -55,10 +52,10 @@ public class DashBoardController {
     }
 
     @GetMapping("/session-audit/microservice/{microservice_name}")
-    public ResponseEntity<?> getSessionAuditMicroservice(HttpServletRequest request, @PathVariable("microservice_name") String microserviceName) {
+    public ResponseEntity<?> getSessionAuditMicroservice(HttpServletRequest request, @PathVariable("microservice_name") String microserviceName, @RequestParam int page, @RequestParam int size) {
         ResponseEntity<?> responseEntity = null;
         try {
-            List<SessionAudit> sessionAudits = sessionAuditService.getSessionAuditByMicroservice(microserviceName);
+            List<SessionAudit> sessionAudits = sessionAuditService.getSessionAuditByMicroservice(microserviceName, page, size);
             responseEntity = new ResponseEntity<>(sessionAudits, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error in getting session audit by microservice {}", e.getMessage());

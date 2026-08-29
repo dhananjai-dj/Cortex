@@ -4,6 +4,8 @@ import com.project.dao.SessionAudit;
 import com.project.dao.repository.SessionAuditRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,8 +31,6 @@ public class SessionAuditService {
         }
         return result;
     }
-
-
     public void createSessionAudit(String summary, UUID documentId, Map<String, Object> metadata, boolean isRetry) {
         SessionAudit sessionAudit = null;
         try {
@@ -52,10 +52,11 @@ public class SessionAuditService {
     }
 
 
-    public List<SessionAudit> getAllSessionAudit() {
+    public List<SessionAudit> getAllSessionAudit(int page, int size) {
         List<SessionAudit> sessionAudits = null;
         try {
-            sessionAudits = sessionAuditRepository.findAll();
+            Pageable pageable = PageRequest.of(page, size);
+            sessionAudits = sessionAuditRepository.findAll(pageable).stream().toList();
             return sessionAudits;
         } catch (Exception e) {
             logger.error("Error in getting complete session audit from DB {}", e.getMessage());
@@ -63,10 +64,11 @@ public class SessionAuditService {
         return sessionAudits;
     }
 
-    public List<SessionAudit> getSessionAuditByMicroservice(String microservice) {
+    public List<SessionAudit> getSessionAuditByMicroservice(String microservice, int page, int size) {
         List<SessionAudit> sessionAudits = null;
         try {
-            sessionAudits = sessionAuditRepository.findByMicroservice(microservice);
+            Pageable pageable = PageRequest.of(page, size);
+            sessionAudits = sessionAuditRepository.findByMicroservice(microservice, pageable);
             return sessionAudits;
         } catch (Exception e) {
             logger.error("Error in getting session audit by microservice from DB {}", e.getMessage());

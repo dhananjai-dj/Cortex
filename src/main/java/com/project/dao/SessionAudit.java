@@ -5,7 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Entity
@@ -25,6 +27,9 @@ public class SessionAudit {
     private String classification;
     @Column(name = "is_retry")
     private boolean isRetry;
+    @CreationTimestamp
+    @Column(name = "create_time")
+    private Timestamp timestamp;
 
     public Long getId() {
         return id;
