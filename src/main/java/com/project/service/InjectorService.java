@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,24 +21,34 @@ public class InjectorService {
 
     private final Logger logger = LoggerFactory.getLogger(InjectorService.class);
     private final ExecutorService injectionExecutor = Executors.newFixedThreadPool(50);
+    private final MergeHistoryService mergeHistoryService;
+    private final SessionAuditService sessionAuditService;
     private final SummaryService summaryService;
     private final VectorStore vectorStore;
 
-    public InjectorService(VectorStore vectorStore, SummaryService summaryService) {
-        this.vectorStore = vectorStore;
+    public InjectorService(MergeHistoryService mergeHistoryService, SessionAuditService sessionAuditService, VectorStore vectorStore, SummaryService summaryService) {
+        this.mergeHistoryService = mergeHistoryService;
+        this.sessionAuditService = sessionAuditService;
         this.summaryService = summaryService;
+        this.vectorStore = vectorStore;
     }
 
-    public void injectData(String summary, Map<String, Object> metadata) {
+    public void injectData(String summary, Map<String, Object> metadata, boolean isRetry) {
         injectionExecutor.submit(() -> {
             List<String> similarDocumentIds = new ArrayList<>();
             try {
                 String combinedSummary = getCombinedSummary(summary, similarDocumentIds);
                 String newSummary = summaryService.generateCombinedSummary(combinedSummary, similarDocumentIds);
-                Document document = new Document(newSummary, metadata);
+                UUID documentId = UUID.randomUUID();
+                Document document = new Document(documentId.toString(), newSummary, metadata);
                 vectorStore.add(List.of(document));
+                if (mergeHistoryService.addHistory(similarDocumentIds, documentId)) {
+                    logger.debug("Added history for similar documents to merge history");
+                }
+                sessionAuditService.createSessionAudit(summary, documentId, metadata, isRetry);
             } catch (Exception e) {
                 logger.error("Error in injecting data: ", e);
+                pushToRetry(summary, metadata);
             }
         });
     }
@@ -50,7 +61,7 @@ public class InjectorService {
             for (Document document : documentList) {
                 if (DocumentUtil.isSimilarDocument(document)) {
                     similarDocumentIds.add(document.getId());
-                    stringBuilder.append(document.getText());
+                    stringBuilder.append(DocumentUtil.toString(document));
                 }
             }
             return stringBuilder.toString();
@@ -60,5 +71,8 @@ public class InjectorService {
         return summary;
     }
 
+    private void pushToRetry(String summary, Map<String, Object> metadata) {
+        //push to kakfa queue
+    }
 
 }

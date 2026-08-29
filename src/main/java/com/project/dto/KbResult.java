@@ -1,13 +1,17 @@
 package com.project.dto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.util.DocumentUtil;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.document.Document;
 
-import java.sql.Timestamp;
 
-public record KbResult(String content, String author, String microservice, String timestamp) {
+public record KbResult(String content, String author, String microservice, String timestamp, String classification) {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger log = LoggerFactory.getLogger(KbResult.class);
 
     @Override
     public @NonNull String toString() {
@@ -16,18 +20,40 @@ public record KbResult(String content, String author, String microservice, Strin
                 ", author='" + author + '\'' +
                 ", microservice='" + microservice + '\'' +
                 ", date='" + timestamp + '\'' +
+                ", classification=" + classification +
                 '}';
     }
 
     public static KbResult defaultResult() {
-        return new KbResult("Content Not found. I don't have any Knowledge about this!!!", null, null, null);
+        return new KbResult("Content Not found. I don't have any Knowledge about this!!!", null, null, null, null);
     }
 
     public static KbResult parse(String string) {
         try {
             return OBJECT_MAPPER.readValue(string, KbResult.class);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse JSON string into KbResult", e);
+            log.error("KbResult parse error of the string {} ", string, e);
+            throw new RuntimeException(e);
         }
     }
+
+    public static KbResult parseDocument(Document document) {
+        if (document == null) {
+            return null;
+        }
+        try {
+            return new KbResult(
+                    document.getText(),
+                    DocumentUtil.extractMetaDataValue(document, "author"),
+                    DocumentUtil.extractMetaDataValue(document, "microservice"),
+                    DocumentUtil.extractMetaDataValue(document, "timestamp"),
+                    DocumentUtil.extractMetaDataValue(document, "classification")
+            );
+        } catch (Exception e) {
+            log.error("KbResult parse error of the document {} ", document, e);
+        }
+        return null;
+    }
+
+
 }
