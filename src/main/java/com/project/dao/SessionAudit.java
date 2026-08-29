@@ -29,7 +29,33 @@ public class SessionAudit {
     private boolean isRetry;
     @CreationTimestamp
     @Column(name = "create_time")
-    private Timestamp timestamp;
+    private Timestamp createTime;
+    @Column(name = "is_injected")
+    private boolean isInjected;
+
+    public boolean isRetry() {
+        return isRetry;
+    }
+
+    public void setRetry(boolean retry) {
+        isRetry = retry;
+    }
+
+    public Timestamp getTimestamp() {
+        return createTime;
+    }
+
+    public void setTimestamp(Timestamp createTime) {
+        this.createTime = createTime;
+    }
+
+    public boolean isInjected() {
+        return isInjected;
+    }
+
+    public void setInjected(boolean injected) {
+        isInjected = injected;
+    }
 
     public Long getId() {
         return id;

@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,16 +32,18 @@ public class SessionAuditService {
         }
         return result;
     }
-    public void createSessionAudit(String summary, UUID documentId, Map<String, Object> metadata, boolean isRetry) {
+
+    public void createSessionAudit(String summary, UUID documentId, Map<String, Object> metadata, boolean isRetry, boolean isInjected) {
         SessionAudit sessionAudit = null;
         try {
             sessionAudit = new SessionAudit();
             sessionAudit.setIsRetry(isRetry);
             sessionAudit.setSummary(summary);
-            sessionAudit.setAuthor(metadata.get("author").toString());
-            sessionAudit.setClassification(metadata.get("classification").toString());
-            sessionAudit.setMicroservice(metadata.get("microservice").toString());
+            sessionAudit.setInjected(isInjected);
             sessionAudit.setDocumentId(documentId);
+            sessionAudit.setAuthor(metadata.get("author").toString());
+            sessionAudit.setMicroservice(metadata.get("microservice").toString());
+            sessionAudit.setClassification(metadata.get("classification").toString());
             if (save(sessionAudit)) {
                 logger.debug("Created session audit for similar documents");
             } else {
@@ -75,4 +78,31 @@ public class SessionAuditService {
         }
         return sessionAudits;
     }
+
+
+    public List<SessionAudit> getSessionAuditByAuthor(String author, int page, int size) {
+        List<SessionAudit> sessionAudits = null;
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            sessionAudits = sessionAuditRepository.findByAuthor(author, pageable);
+            return sessionAudits;
+        } catch (Exception e) {
+            logger.error("Error in getting session audit by author from DB {}", e.getMessage());
+        }
+        return sessionAudits;
+    }
+
+    public List<SessionAudit> getSessionAuditByDate(Timestamp starDate, Timestamp endDate, int page, int size) {
+        List<SessionAudit> sessionAudits = null;
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            sessionAudits = sessionAuditRepository.findByCreateTimeBetween(starDate, endDate, pageable);
+            return sessionAudits;
+        } catch (Exception e) {
+            logger.error("Error in getting session audit by start date and end date from DB {}", e.getMessage());
+        }
+        return sessionAudits;
+    }
+
+
 }

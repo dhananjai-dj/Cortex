@@ -59,8 +59,11 @@ public class InjectorService {
             if (mergeHistoryService.addHistory(similarDocumentIds, documentId)) {
                 logger.debug("Added history for similar documents to merge history");
             }
-            sessionAuditService.createSessionAudit(summary, documentId, metaData, isRetry);
+            sessionAuditService.createSessionAudit(summary, documentId, metaData, isRetry, true);
         } catch (Exception e) {
+            if (isRetry) {
+                sessionAuditService.createSessionAudit(summary, documentId, metaData, true, false);
+            }
             logger.error("Error in injecting data: {}", e.getMessage());
             throw new RuntimeException("Error in injecting data");
         }
