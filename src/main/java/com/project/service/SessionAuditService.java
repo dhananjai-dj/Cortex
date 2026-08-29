@@ -2,7 +2,6 @@ package com.project.service;
 
 import com.project.dao.SessionAudit;
 import com.project.dao.repository.SessionAuditRepository;
-import com.project.util.DocumentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,7 @@ public class SessionAuditService {
         try {
             sessionAudit = new SessionAudit();
             sessionAudit.setIsRetry(isRetry);
-            sessionAudit.setSummary(DocumentUtil.encodeString(summary));
+            sessionAudit.setSummary(summary);
             sessionAudit.setAuthor(metadata.get("author").toString());
             sessionAudit.setClassification(metadata.get("classification").toString());
             sessionAudit.setMicroservice(metadata.get("microservice").toString());

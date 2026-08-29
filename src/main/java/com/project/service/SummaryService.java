@@ -1,6 +1,6 @@
 package com.project.service;
 
-import com.project.constants.Prompts;
+import com.project.util.Constants;
 import org.springframework.ai.chat.client.ChatClient;
 import com.project.dto.KbResult;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class SummaryService {
 
     public String generateCombinedSummary(String summary, List<String> deleteDocumentIds) {
         try {
-            String generatedSummary = chatClient.prompt().system(Prompts.INJECT_SUMMARY_PROMPT).user(summary).call().content();
+            String generatedSummary = chatClient.prompt().system(Constants.Prompts.INJECT_SUMMARY_PROMPT).user(summary).call().content();
             if (generatedSummary != null && !generatedSummary.equalsIgnoreCase(summary) && !deleteDocumentIds.isEmpty()) {
                 deleteService.deleteData(deleteDocumentIds);
             }
@@ -38,7 +38,7 @@ public class SummaryService {
     public List<KbResult> generateResult(List<KbResult> resultList) {
         try {
             String summary = resultList.stream().map(KbResult::toString).collect(Collectors.joining());
-            String jsonResponse = chatClient.prompt().system(Prompts.SEARCH_SUMMARY_PROMPT).user(summary).call().content();
+            String jsonResponse = chatClient.prompt().system(Constants.Prompts.SEARCH_SUMMARY_PROMPT).user(summary).call().content();
             return List.of(KbResult.parse(jsonResponse));
         } catch (Exception e) {
             logger.error("Error in generating result summary", e);
