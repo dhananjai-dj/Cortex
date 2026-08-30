@@ -22,8 +22,8 @@ spring:
         dimensions: 768
   datasource:
     url: jdbc:postgresql://localhost:5432/cortex
-    username: dhananjai_dj
-    password: Ammu123*
+    username: username
+    password: password
   kafka:
     bootstrap-servers:
       - localhost:9092
