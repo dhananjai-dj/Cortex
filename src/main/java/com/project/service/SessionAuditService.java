@@ -34,24 +34,29 @@ public class SessionAuditService {
     }
 
     public void createSessionAudit(String summary, UUID documentId, Map<String, Object> metadata, boolean isRetry, boolean isInjected) {
-        SessionAudit sessionAudit = null;
         try {
-            sessionAudit = new SessionAudit();
+            SessionAudit sessionAudit = new SessionAudit();
             sessionAudit.setIsRetry(isRetry);
-            sessionAudit.setSummary(summary);
             sessionAudit.setInjected(isInjected);
+            sessionAudit.setSummary(summary);
             sessionAudit.setDocumentId(documentId);
-            sessionAudit.setAuthor(metadata.get("author").toString());
-            sessionAudit.setMicroservice(metadata.get("microservice").toString());
-            sessionAudit.setClassification(metadata.get("classification").toString());
+            sessionAudit.setAuthor(extractMetadataValue(metadata, "author"));
+            sessionAudit.setMicroservice(extractMetadataValue(metadata, "microservice"));
+            sessionAudit.setClassification(extractMetadataValue(metadata, "classification"));
+
             if (save(sessionAudit)) {
-                logger.debug("Created session audit for similar documents");
+                logger.debug("Created session audit for document {}", documentId);
             } else {
-                logger.error("Error in creating session audit for similar documents");
+                logger.error("Error in creating session audit for document {}", documentId);
             }
         } catch (Exception e) {
-            logger.error("Error in creating session audit {}", e.getMessage());
+            logger.error("Error in creating session audit for document {}: {}", documentId, e.getMessage());
         }
+    }
+
+    private String extractMetadataValue(Map<String, Object> metadata, String key) {
+        Object value = metadata != null ? metadata.get(key) : null;
+        return value != null ? value.toString() : "UNKNOWN";
     }
 
 
