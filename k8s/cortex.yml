@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cortex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cortex
+  template:
+    metadata:
+      labels:
+        app: cortex
+    spec:
+      containers:
+        - name: cortex
+          image: cortex-app:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/cortex"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: SPRING_AI_OPENAI_BASE_URL
+              value: "http://192.168.1.5:1234/v1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cortex
+spec:
+  type: NodePort
+  selector:
+    app: cortex
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
